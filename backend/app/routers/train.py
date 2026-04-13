@@ -5,6 +5,7 @@ from ..routers.data import cleaned_data_store
 import pandas as pd
 import numpy as np
 import asyncio
+import os
 
 router = APIRouter(prefix="/api", tags=["train"])
 
@@ -125,10 +126,19 @@ async def get_model_fit(model_id: str):
         y_actual = y * trainer.scaler_std[target_idx] + trainer.scaler_mean[target_idx]
         y_pred = predictions * trainer.scaler_std[target_idx] + trainer.scaler_mean[target_idx]
         
+        # 获取时间数据作为横坐标
+        timestamps = []
+        if 'timestamp' in df.columns:
+            # 确保时间戳是字符串格式
+            timestamps = df['timestamp'].astype(str).tolist()
+            # 只取与预测数据对应的时间戳
+            timestamps = timestamps[trainer.lookback:trainer.lookback + len(y_actual.flatten())]
+        
         return {
             "actual": y_actual.flatten().tolist(),
             "predicted": y_pred.flatten().tolist(),
-            "target_column": trainer.target_column
+            "target_column": trainer.target_column,
+            "timestamps": timestamps
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取拟合结果失败: {str(e)}")
@@ -144,3 +154,22 @@ async def websocket_train_progress(websocket: WebSocket, model_id: str):
             await websocket.send_text(f"训练进度更新: {data}")
     except WebSocketDisconnect:
         active_connections.remove(websocket)
+
+@router.delete("/model/{model_id}")
+async def delete_model(model_id: str):
+    try:
+        model_dir = "saved_models"
+        
+        # 删除模型文件
+        model_path = os.path.join(model_dir, f"{model_id}.pt")
+        config_path = os.path.join(model_dir, f"{model_id}_config.json")
+        
+        if os.path.exists(model_path):
+            os.remove(model_path)
+        
+        if os.path.exists(config_path):
+            os.remove(config_path)
+        
+        return {"status": "success", "message": f"模型 {model_id} 已删除"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"删除模型失败: {str(e)}")

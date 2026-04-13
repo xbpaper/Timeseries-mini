@@ -25,7 +25,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { finetuneModel, getModels, getAgentInfo, getModelFit } from '../services/api';
+import { finetuneModel, getModels, getAgentInfo, getModelFit, deleteModel } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 
 ChartJS.register(
@@ -60,9 +60,25 @@ const FinetunePage: React.FC = () => {
   const loadModels = async () => {
     try {
       const result = await getModels();
-      setModels(result.models);
+      // 按创建时间排序，只显示最新的10个模型
+      const sortedModels = result.models.sort((a: any, b: any) => b.created - a.created).slice(0, 10);
+      setModels(sortedModels);
     } catch (err) {
       console.error('加载模型列表失败', err);
+    }
+  };
+
+  const handleDeleteModel = async (modelId: string) => {
+    if (window.confirm('确定要删除这个模型吗？')) {
+      try {
+        await deleteModel(modelId);
+        loadModels();
+        if (selectedModel === modelId) {
+          setSelectedModel('');
+        }
+      } catch (err: any) {
+        setError(err.response?.data?.detail || '删除模型失败');
+      }
     }
   };
 
@@ -146,7 +162,19 @@ const FinetunePage: React.FC = () => {
               >
                 {models.map((model) => (
                   <MenuItem key={model.id} value={model.id}>
-                    {model.id}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                      <span>{model.id}</span>
+                      <Button
+                        size="small"
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteModel(model.id);
+                        }}
+                      >
+                        删除
+                      </Button>
+                    </Box>
                   </MenuItem>
                 ))}
               </Select>
@@ -260,7 +288,7 @@ const FinetunePage: React.FC = () => {
                   <Box sx={{ height: 400 }}>
                     <Line
                       data={{
-                        labels: Array.from({ length: fitData.actual.length }, (_, i) => i + 1),
+                        labels: fitData.timestamps && fitData.timestamps.length > 0 ? fitData.timestamps : Array.from({ length: fitData.actual.length }, (_, i) => i + 1),
                         datasets: [
                           {
                             label: '实际值',
@@ -291,6 +319,12 @@ const FinetunePage: React.FC = () => {
                           },
                         },
                         scales: {
+                          x: {
+                            title: {
+                              display: true,
+                              text: '时间',
+                            },
+                          },
                           y: {
                             beginAtZero: false,
                           },

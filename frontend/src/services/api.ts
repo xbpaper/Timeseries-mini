@@ -77,3 +77,8 @@ export const numericData = async () => {
   const response = await axios.post(`${API_BASE_URL}/numeric`);
   return response.data;
 };
+
+export const deleteModel = async (modelId: string) => {
+  const response = await axios.delete(`${API_BASE_URL}/model/${modelId}`);
+  return response.data;
+};

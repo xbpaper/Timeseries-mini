@@ -51,7 +51,7 @@ function App() {
         <AppBar position="static">
           <Toolbar>
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              时序模型平台 - 迷你版
+              时序模型 - 迷你版
             </Typography>
             <Button color="inherit">帮助</Button>
           </Toolbar>
