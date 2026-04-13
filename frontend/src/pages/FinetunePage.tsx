@@ -1,0 +1,209 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Typography,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  TextField,
+  Alert,
+  CircularProgress,
+  Chip,
+} from '@mui/material';
+import { finetuneModel, getModels, getAgentInfo } from '../services/api';
+import { useAppContext } from '../context/AppContext';
+
+const FinetunePage: React.FC = () => {
+  const { currentModel } = useAppContext();
+  const [models, setModels] = useState<any[]>([]);
+  const [selectedModel, setSelectedModel] = useState('');
+  const [epochs, setEpochs] = useState(10);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [agentInfo, setAgentInfo] = useState<any>(null);
+
+  useEffect(() => {
+    loadModels();
+    if (currentModel?.id) {
+      setSelectedModel(currentModel.id);
+    }
+  }, [currentModel]);
+
+  const loadModels = async () => {
+    try {
+      const result = await getModels();
+      setModels(result.models);
+    } catch (err) {
+      console.error('加载模型列表失败', err);
+    }
+  };
+
+  const handleFinetune = async () => {
+    if (!selectedModel) {
+      setError('请选择模型');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      const result = await finetuneModel({
+        model_id: selectedModel,
+        new_data: [],
+        epochs,
+      });
+
+      setSuccess(true);
+      loadModels();
+    } catch (err: any) {
+      setError(err.response?.data?.detail || '微调失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGenerateAgent = async () => {
+    if (!selectedModel) {
+      setError('请选择模型');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const info = await getAgentInfo(selectedModel);
+      setAgentInfo(info);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || '生成智能体失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Box>
+      <Typography variant="h4" gutterBottom>
+        模型微调与智能体生成
+      </Typography>
+
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box sx={{ mb: 3 }}>
+            <FormControl fullWidth>
+              <InputLabel>选择模型</InputLabel>
+              <Select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                label="选择模型"
+              >
+                {models.map((model) => (
+                  <MenuItem key={model.id} value={model.id}>
+                    {model.id}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
+
+          <Box sx={{ mb: 3 }}>
+            <TextField
+              label="微调轮数"
+              type="number"
+              value={epochs}
+              onChange={(e) => setEpochs(parseInt(e.target.value))}
+              sx={{ width: 150 }}
+            />
+          </Box>
+
+          <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleFinetune}
+              disabled={loading || !selectedModel}
+            >
+              {loading ? <CircularProgress size={24} /> : '微调模型'}
+            </Button>
+
+            <Button
+              variant="contained"
+              color="success"
+              onClick={handleGenerateAgent}
+              disabled={loading || !selectedModel}
+            >
+              生成智能体
+            </Button>
+          </Box>
+
+          {error && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          {success && (
+            <Alert severity="success" sx={{ mt: 2 }}>
+              微调完成！
+            </Alert>
+          )}
+
+          {agentInfo && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                工业智能体信息
+              </Typography>
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography>
+                    <strong>模型 ID:</strong> {agentInfo.model_id}
+                  </Typography>
+                  <Typography>
+                    <strong>目标列:</strong> {agentInfo.target_column}
+                  </Typography>
+                  <Typography>
+                    <strong>回看窗口:</strong> {agentInfo.lookback}
+                  </Typography>
+                  <Typography>
+                    <strong>预测步数:</strong> {agentInfo.forecast_steps}
+                  </Typography>
+                  <Typography sx={{ mt: 2 }}>
+                    <strong>API 端点:</strong>
+                  </Typography>
+                  <Chip
+                    label={agentInfo.api_endpoint}
+                    color="primary"
+                    sx={{ mt: 1 }}
+                  />
+                  <Typography sx={{ mt: 2 }}>
+                    <strong>使用方法:</strong>
+                  </Typography>
+                  <Box
+                    component="pre"
+                    sx={{
+                      p: 2,
+                      bgcolor: 'grey.100',
+                      borderRadius: 1,
+                      overflow: 'auto',
+                    }}
+                  >
+                    {JSON.stringify(agentInfo.usage, null, 2)}
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+    </Box>
+  );
+};
+
+export default FinetunePage;
