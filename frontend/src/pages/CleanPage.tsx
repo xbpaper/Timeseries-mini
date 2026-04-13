@@ -23,7 +23,7 @@ import {
   TableRow,
   Paper,
 } from '@mui/material';
-import { cleanData } from '../services/api';
+import { cleanData, numericData } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 
 interface CleanPageProps {
@@ -52,8 +52,26 @@ const CleanPage: React.FC<CleanPageProps> = ({ onNext }) => {
   const [cleanedRows, setCleanedRows] = useState(0);
   const [preview, setPreview] = useState<any[]>([]);
 
-  const handleColumnChange = (event: SelectChangeEvent<string[]>, value: string[]) => {
-    setSelectedColumns(value);
+  const handleColumnChange = (event: SelectChangeEvent<string[]>, child: React.ReactNode) => {
+    if (Array.isArray(event.target.value)) {
+      setSelectedColumns(event.target.value);
+    }
+  };
+
+  const handleNumeric = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await numericData();
+      setCleanedData(result.data);
+      setCleanedRows(result.cleaned_rows);
+      setPreview(result.data.slice(0, 10));
+    } catch (err: any) {
+      setError(err.response?.data?.detail || '数值化失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClean = async () => {
@@ -154,14 +172,24 @@ const CleanPage: React.FC<CleanPageProps> = ({ onNext }) => {
             </Select>
           </FormControl>
 
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleClean}
-            disabled={loading}
-          >
-            {loading ? <CircularProgress size={24} /> : '应用清洗'}
-          </Button>
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <Button
+              variant="contained"
+              color="warning"
+              onClick={handleNumeric}
+              disabled={loading}
+            >
+              数值化
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleClean}
+              disabled={loading}
+            >
+              {loading ? <CircularProgress size={24} /> : '应用清洗'}
+            </Button>
+          </Box>
 
           {error && (
             <Alert severity="error" sx={{ mt: 2 }}>

@@ -78,3 +78,29 @@ async def get_cleaned_data():
     
     df = cleaned_data_store['cleaned_data']
     return {"data": df.to_dict('records')}
+
+@router.post("/numeric")
+async def numeric_data():
+    try:
+        if 'raw_data' not in cleaned_data_store:
+            raise HTTPException(status_code=400, detail="请先上传数据")
+        
+        df = cleaned_data_store['raw_data']
+        
+        for col in df.columns:
+            if col != 'timestamp' and col != 'time' and col != 'date':
+                try:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+                except:
+                    pass
+        
+        cleaned_data_store['cleaned_data'] = df
+        
+        data = df.to_dict('records')
+        
+        return CleanResponse(
+            cleaned_rows=len(df),
+            data=data[:100]
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"数值化失败: {str(e)}")

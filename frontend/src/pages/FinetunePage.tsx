@@ -181,6 +181,15 @@ const FinetunePage: React.FC = () => {
             >
               生成智能体
             </Button>
+
+            <Button
+              variant="contained"
+              color="info"
+              onClick={handleGetFitData}
+              disabled={loadingFit || !selectedModel}
+            >
+              {loadingFit ? <CircularProgress size={24} /> : '数据拟合'}
+            </Button>
           </Box>
 
           {error && (

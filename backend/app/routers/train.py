@@ -47,6 +47,24 @@ async def finetune_model(request: FinetuneRequest):
         
         new_df = pd.DataFrame(request.new_data)
         
+        # 确保目标列是数值类型
+        if trainer.target_column in new_df.columns:
+            try:
+                new_df[trainer.target_column] = pd.to_numeric(new_df[trainer.target_column], errors='coerce')
+            except:
+                pass
+        
+        # 确保所有数值列都是正确的类型
+        for col in new_df.columns:
+            if col != 'timestamp' and col != 'time' and col != 'date':
+                try:
+                    new_df[col] = pd.to_numeric(new_df[col], errors='coerce')
+                except:
+                    pass
+        
+        # 移除可能的空值
+        new_df = new_df.dropna()
+        
         X, y = trainer.prepare_data(
             new_df,
             trainer.target_column,

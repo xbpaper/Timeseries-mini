@@ -1,17 +1,16 @@
 @echo off
-echo 启动后端服务...
-cd backend
-start cmd /k "python -m uvicorn app.main:app --reload --port 8000"
 
-echo 等待后端启动...
-timeout /t 3
+REM Start backend service
+start "Backend Service" cmd /k "cd backend && python -m uvicorn app.main:app --reload --port 8000"
 
-echo 启动前端服务...
-cd ..\frontend
-start cmd /k "npm run dev"
+REM Wait 2 seconds to ensure backend service starts
+ping 127.0.0.1 -n 3 > nul
 
-echo 服务启动完成！
-echo 后端地址: http://localhost:8000
-echo 前端地址: http://localhost:3000
-echo API文档: http://localhost:8000/docs
-pause
+REM Start frontend service
+start "Frontend Service" cmd /k "cd frontend && npm run dev"
+
+echo Both services have been started!
+echo Backend service URL: http://localhost:8000
+echo Frontend service URL: http://localhost:3002
+echo Press any key to exit...
+pause > nul

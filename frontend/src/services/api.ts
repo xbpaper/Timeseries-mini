@@ -72,3 +72,8 @@ export const getModelFit = async (modelId: string) => {
   const response = await axios.get(`${API_BASE_URL}/model/${modelId}/fit`);
   return response.data;
 };
+
+export const numericData = async () => {
+  const response = await axios.post(`${API_BASE_URL}/numeric`);
+  return response.data;
+};
