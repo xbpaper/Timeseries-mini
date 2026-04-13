@@ -48,7 +48,7 @@ const TrainPage: React.FC<TrainPageProps> = ({ onNext }) => {
         lookback,
         forecast_steps: forecastSteps,
         epochs,
-        learning_rate,
+        learning_rate: learningRate,
       });
 
       setCurrentModel({
@@ -100,7 +100,7 @@ const TrainPage: React.FC<TrainPageProps> = ({ onNext }) => {
             </Typography>
             <Slider
               value={lookback}
-              onChange={(e, value) => setLookback(value as number)}
+              onChange={(_, value) => setLookback(value as number)}
               min={12}
               max={48}
               marks
@@ -115,7 +115,7 @@ const TrainPage: React.FC<TrainPageProps> = ({ onNext }) => {
             </Typography>
             <Slider
               value={forecastSteps}
-              onChange={(e, value) => setForecastSteps(value as number)}
+              onChange={(_, value) => setForecastSteps(value as number)}
               min={1}
               max={24}
               marks

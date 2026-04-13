@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = 'http://localhost:8000/api';
 
 export const uploadCSV = async (file: File) => {
   const formData = new FormData();
@@ -65,5 +65,10 @@ export const getModels = async () => {
 
 export const getAgentInfo = async (modelId: string) => {
   const response = await axios.get(`${API_BASE_URL}/agent/${modelId}`);
+  return response.data;
+};
+
+export const getModelFit = async (modelId: string) => {
+  const response = await axios.get(`${API_BASE_URL}/model/${modelId}/fit`);
   return response.data;
 };

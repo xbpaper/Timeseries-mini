@@ -84,6 +84,37 @@ async def list_models():
     
     return {"models": models}
 
+@router.get("/model/{model_id}/fit")
+async def get_model_fit(model_id: str):
+    try:
+        trainer.load_model(model_id)
+        
+        if 'cleaned_data' not in cleaned_data_store:
+            raise HTTPException(status_code=400, detail="请先清洗数据")
+        
+        df = cleaned_data_store['cleaned_data']
+        
+        X, y = trainer.prepare_data(
+            df,
+            trainer.target_column,
+            trainer.lookback,
+            trainer.forecast_steps
+        )
+        
+        predictions = trainer.predict(X)
+        
+        target_idx = trainer.feature_columns.index(trainer.target_column)
+        y_actual = y * trainer.scaler_std[target_idx] + trainer.scaler_mean[target_idx]
+        y_pred = predictions * trainer.scaler_std[target_idx] + trainer.scaler_mean[target_idx]
+        
+        return {
+            "actual": y_actual.flatten().tolist(),
+            "predicted": y_pred.flatten().tolist(),
+            "target_column": trainer.target_column
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取拟合结果失败: {str(e)}")
+
 @router.websocket("/ws/train/{model_id}")
 async def websocket_train_progress(websocket: WebSocket, model_id: str):
     await websocket.accept()

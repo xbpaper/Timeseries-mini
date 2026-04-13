@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { SelectChangeEvent } from '@mui/material/Select';
 import {
   Box,
   Button,
@@ -51,8 +52,7 @@ const CleanPage: React.FC<CleanPageProps> = ({ onNext }) => {
   const [cleanedRows, setCleanedRows] = useState(0);
   const [preview, setPreview] = useState<any[]>([]);
 
-  const handleColumnChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    const value = event.target.value as string[];
+  const handleColumnChange = (event: SelectChangeEvent<string[]>, value: string[]) => {
     setSelectedColumns(value);
   };
 

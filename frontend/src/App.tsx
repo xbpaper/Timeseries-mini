@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { AppProvider } from './context/AppContext';
 import UploadPage from './pages/UploadPage';
 import CleanPage from './pages/CleanPage';

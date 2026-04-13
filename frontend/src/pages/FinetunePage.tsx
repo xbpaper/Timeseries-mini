@@ -14,8 +14,29 @@ import {
   CircularProgress,
   Chip,
 } from '@mui/material';
-import { finetuneModel, getModels, getAgentInfo } from '../services/api';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+import { finetuneModel, getModels, getAgentInfo, getModelFit } from '../services/api';
 import { useAppContext } from '../context/AppContext';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const FinetunePage: React.FC = () => {
   const { currentModel } = useAppContext();
@@ -26,6 +47,8 @@ const FinetunePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [agentInfo, setAgentInfo] = useState<any>(null);
+  const [fitData, setFitData] = useState<any>(null);
+  const [loadingFit, setLoadingFit] = useState(false);
 
   useEffect(() => {
     loadModels();
@@ -54,7 +77,7 @@ const FinetunePage: React.FC = () => {
     setSuccess(false);
 
     try {
-      const result = await finetuneModel({
+      await finetuneModel({
         model_id: selectedModel,
         new_data: [],
         epochs,
@@ -62,10 +85,27 @@ const FinetunePage: React.FC = () => {
 
       setSuccess(true);
       loadModels();
+      await handleGetFitData();
     } catch (err: any) {
       setError(err.response?.data?.detail || '微调失败');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGetFitData = async () => {
+    if (!selectedModel) {
+      return;
+    }
+
+    setLoadingFit(true);
+    try {
+      const data = await getModelFit(selectedModel);
+      setFitData(data);
+    } catch (err: any) {
+      console.error('获取拟合数据失败', err);
+    } finally {
+      setLoadingFit(false);
     }
   };
 
@@ -198,6 +238,65 @@ const FinetunePage: React.FC = () => {
                   </Box>
                 </CardContent>
               </Card>
+            </Box>
+          )}
+
+          {fitData && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                模型拟合效果
+              </Typography>
+              <Card variant="outlined">
+                <CardContent>
+                  <Box sx={{ height: 400 }}>
+                    <Line
+                      data={{
+                        labels: Array.from({ length: fitData.actual.length }, (_, i) => i + 1),
+                        datasets: [
+                          {
+                            label: '实际值',
+                            data: fitData.actual,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.4,
+                          },
+                          {
+                            label: '预测值',
+                            data: fitData.predicted,
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            tension: 0.4,
+                          },
+                        ],
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: `${fitData.target_column} 拟合对比`,
+                          },
+                          legend: {
+                            position: 'top' as const,
+                          },
+                        },
+                        scales: {
+                          y: {
+                            beginAtZero: false,
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+                </CardContent>
+              </Card>
+            </Box>
+          )}
+
+          {loadingFit && (
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+              <CircularProgress size={40} />
             </Box>
           )}
         </CardContent>
