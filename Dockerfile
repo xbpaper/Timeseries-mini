@@ -31,7 +31,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # 复制前端构建产物到后端静态文件目录
 RUN mkdir -p app/static
-RUN cp -r /app/frontend/build/* app/static/
+RUN cp -r /app/frontend/dist/* app/static/
 
 # 暴露端口
 EXPOSE 8080
