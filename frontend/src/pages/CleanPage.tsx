@@ -52,7 +52,7 @@ const CleanPage: React.FC<CleanPageProps> = ({ onNext }) => {
   const [cleanedRows, setCleanedRows] = useState(0);
   const [preview, setPreview] = useState<any[]>([]);
 
-  const handleColumnChange = (event: SelectChangeEvent<string[]>, child: React.ReactNode) => {
+  const handleColumnChange = (event: SelectChangeEvent<string[]>, _: React.ReactNode) => {
     if (Array.isArray(event.target.value)) {
       setSelectedColumns(event.target.value);
     }
