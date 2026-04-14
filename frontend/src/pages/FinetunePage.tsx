@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Button,
@@ -49,6 +49,7 @@ const FinetunePage: React.FC = () => {
   const [agentInfo, setAgentInfo] = useState<any>(null);
   const [fitData, setFitData] = useState<any>(null);
   const [loadingFit, setLoadingFit] = useState(false);
+  const chartRef = useRef<any>(null);
 
   useEffect(() => {
     loadModels();
@@ -122,6 +123,21 @@ const FinetunePage: React.FC = () => {
       console.error('获取拟合数据失败', err);
     } finally {
       setLoadingFit(false);
+    }
+  };
+
+  const handleDownloadChart = () => {
+    // 查找拟合图的canvas元素
+    const cardContent = document.querySelector('.css-46bh2p-MuiCardContent-root');
+    if (cardContent) {
+      const canvas = cardContent.querySelector('canvas');
+      if (canvas) {
+        const url = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `fit_comparison_${fitData?.target_column || 'unknown'}.png`;
+        link.href = url;
+        link.click();
+      }
     }
   };
 
@@ -280,13 +296,23 @@ const FinetunePage: React.FC = () => {
 
           {fitData && (
             <Box sx={{ mt: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                模型拟合效果
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">
+                  模型拟合效果
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleDownloadChart}
+                >
+                  下载图表
+                </Button>
+              </Box>
               <Card variant="outlined">
                 <CardContent>
                   <Box sx={{ height: 400 }}>
                     <Line
+                      ref={chartRef}
                       data={{
                         labels: fitData.timestamps && fitData.timestamps.length > 0 ? fitData.timestamps : Array.from({ length: fitData.actual.length }, (_, i) => i + 1),
                         datasets: [

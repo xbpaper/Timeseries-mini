@@ -53,7 +53,9 @@ function App() {
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
               时序模型 - 迷你版
             </Typography>
-            <Button color="inherit">帮助</Button>
+            <Button color="inherit" onClick={() => window.open('https://www.paperfancy.cn', '_blank')}>
+              关于
+            </Button>
           </Toolbar>
         </AppBar>
 
