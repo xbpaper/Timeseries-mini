@@ -1,7 +1,7 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pandas
 numpy
-torch==2.4.1+cpu --index-url https://download.pytorch.org/whl/cpu
+torch --index-url https://download.pytorch.org/whl/cpu
 python-multipart
 websockets
