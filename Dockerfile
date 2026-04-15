@@ -4,6 +4,9 @@ WORKDIR /app
 
 # 安装系统依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    gcc \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # 安装Node.js和npm
