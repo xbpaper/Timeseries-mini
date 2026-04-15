@@ -79,7 +79,7 @@ chmod +x start.sh
 
 ```bash
 cd backend
-python -m uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 808
 ```
 
 **启动前端：**

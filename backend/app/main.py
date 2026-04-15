@@ -6,7 +6,7 @@ import os
 
 app = FastAPI(
     title="时序模型平台",
-    description="迷你版 TPT2 风格时序大模型平台 - 数据上传、清洗、训练、微调、推理",
+    description="迷你版时序大模型平台 - 数据上传、清洗、训练、微调、推理",
     version="1.0.0"
 )
 
@@ -21,7 +21,7 @@ app.add_middleware(
 # 挂载静态文件
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
-    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+    app.mount("/static", StaticFiles(directory=static_dir, html=True), name="static")
 
 app.include_router(data.router)
 app.include_router(train.router)

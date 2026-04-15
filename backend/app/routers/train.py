@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, FileResponse
 from ..schemas.schemas import TrainRequest, TrainResponse, FinetuneRequest, FinetuneResponse
 from ..services.trainer import ModelTrainer
 from ..routers.data import cleaned_data_store
@@ -173,3 +173,22 @@ async def delete_model(model_id: str):
         return {"status": "success", "message": f"模型 {model_id} 已删除"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"删除模型失败: {str(e)}")
+
+@router.get("/model/{model_id}/download")
+async def download_model(model_id: str):
+    try:
+        model_dir = "saved_models"
+        model_path = os.path.join(model_dir, f"{model_id}.pt")
+        
+        if not os.path.exists(model_path):
+            raise HTTPException(status_code=404, detail=f"模型 {model_id} 不存在")
+        
+        return FileResponse(
+            path=model_path,
+            filename=f"{model_id}.pt",
+            media_type="application/octet-stream"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"下载模型失败: {str(e)}")

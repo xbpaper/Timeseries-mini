@@ -13,21 +13,29 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get install -y nodejs
 
+# 先复制前端依赖文件
+COPY frontend/package*.json ./frontend/
+
+# 安装前端依赖
+WORKDIR /app/frontend
+RUN npm install
+
 # 复制前端代码
-COPY frontend/ ./frontend/
+COPY frontend/ ./
 
 # 构建前端
-WORKDIR /app/frontend
-RUN npm install && npm run build
+RUN npm run build
 
-# 复制后端代码
+# 复制后端依赖文件
 WORKDIR /app
-COPY backend/ ./backend/
+COPY backend/requirements.txt ./backend/
 
 # 安装后端依赖
 WORKDIR /app/backend
-COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# 复制后端代码
+COPY backend/ ./
 
 # 复制前端构建产物到后端静态文件目录
 RUN mkdir -p app/static

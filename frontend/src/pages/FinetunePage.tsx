@@ -25,7 +25,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
-import { finetuneModel, getModels, getAgentInfo, getModelFit, deleteModel } from '../services/api';
+import { API_BASE_URL, finetuneModel, getModels, getAgentInfo, getModelFit, deleteModel } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 
 ChartJS.register(
@@ -160,6 +160,30 @@ const FinetunePage: React.FC = () => {
     }
   };
 
+  const handleDownloadModel = async () => {
+    if (!selectedModel) {
+      setError('请选择模型');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/model/${selectedModel}/download`);
+      if (!response.ok) {
+        throw new Error('下载模型失败');
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${selectedModel}.pt`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setError(err.message || '下载模型失败');
+    }
+  };
+
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
@@ -233,6 +257,15 @@ const FinetunePage: React.FC = () => {
               disabled={loadingFit || !selectedModel}
             >
               {loadingFit ? <CircularProgress size={24} /> : '数据拟合'}
+            </Button>
+
+            <Button
+              variant="contained"
+              color="warning"
+              onClick={handleDownloadModel}
+              disabled={!selectedModel}
+            >
+              下载模型
             </Button>
           </Box>
 
